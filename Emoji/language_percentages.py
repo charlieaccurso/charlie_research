@@ -1,6 +1,6 @@
 import json
 import cld2
-from collections import Counter
+from collections import Counter, defaultdict
 
 # Path to your file
 file_path = 'conv_sample'
@@ -24,7 +24,7 @@ def extract_text_from_data(data):
 
 def main():
     start_line = 1
-    num_datapoints = 100  # Number of data points to iterate through
+    num_datapoints = 500  # Number of data points to iterate through
     max_text_length = 100  # Maximum number of characters to display
     
     detected_languages = Counter()
@@ -74,18 +74,35 @@ def main():
     show_non_english = input("\nWould you like to see all Non-English lines? [y/n]: ")
     if show_non_english.lower() == 'y':
         print("\nNon-English Lines:")
+        print(f"TOTAL LINES: {len(non_english_lines)}")
         for line in non_english_lines:
             print(line)
 
     show_unknowns = input("\nWould you like to see all Unknown lines? [y/n]: ")
     if show_unknowns.lower() == 'y':
         print("\nUnknown Lines:")
+        print(f"TOTAL LINES: {len(unknown_lines)}")
         for line in unknown_lines:
             print(line)
 
+    classify_unknowns = input(f"\nWould you like to manually classify the {len(unknown_lines)} Unknown lines? [y/n]: ")
+    if classify_unknowns.lower() == 'y':
+        unknowns_dict= defaultdict(int)
+        for i in range(len(unknown_lines)):
+            classification= input(f"Line {i+1}: {unknown_lines[i]} ==> ")
+            if classification == '':
+                classification= 'English'
+            unknowns_dict[classification]+= 1
+        
+        # print out the raw counts
+        for classification, count in unknowns_dict.items():
+            print(f"{classification}: {count} lines, {round((count / len(unknown_lines))*100), 2}% of all Unknown lines")
+
+
     show_english = input("\nWould you like to see all English lines? [y/n]: ")
     if show_english.lower() == 'y':
-        print("\nUnknown Lines:")
+        print("\nEnglish Lines:")
+        print(f"TOTAL LINES: {len(english_lines)}")
         for line in english_lines:
             print(line)
 
