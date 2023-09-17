@@ -1,6 +1,7 @@
 import json
 import cld2
 from collections import Counter, defaultdict
+from classify_unknowns import classify_unknowns
 
 # Path to your file
 file_path = 'conv_sample'
@@ -24,7 +25,7 @@ def extract_text_from_data(data):
 
 def main():
     start_line = 1
-    num_datapoints = 500  # Number of data points to iterate through
+    num_datapoints = 20000  # Number of data points to iterate through
     max_text_length = 100  # Maximum number of characters to display
     
     detected_languages = Counter()
@@ -44,9 +45,12 @@ def main():
                 text = extract_text_from_data(json_data)
                 truncated_text = truncate_text(text, max_text_length)
                 
-                detected_lang = cld2.detect(text)
-                detected_language = detected_lang[2][0][1] if detected_lang[0] else "Unknown"
-                detected_languages[detected_language] += 1
+                try:
+                    detected_lang = cld2.detect(text)
+                    detected_language = detected_lang[2][0][1] if detected_lang[0] else "Unknown"
+                    detected_languages[detected_language] += 1
+                except ValueError as e:
+                    print(f"Error detecting language: {e}")
                 
                 print(f"Data Point {line_number} Text: {truncated_text}")
                 print(f"LANGUAGE: {detected_language}")
@@ -85,19 +89,11 @@ def main():
         for line in unknown_lines:
             print(line)
 
-    classify_unknowns = input(f"\nWould you like to manually classify the {len(unknown_lines)} Unknown lines? [y/n]: ")
-    if classify_unknowns.lower() == 'y':
-        unknowns_dict= defaultdict(int)
-        for i in range(len(unknown_lines)):
-            classification= input(f"Line {i+1}: {unknown_lines[i]} ==> ")
-            if classification == '':
-                classification= 'English'
-            unknowns_dict[classification]+= 1
-        
-        # print out the raw counts
-        for classification, count in unknowns_dict.items():
-            print(f"{classification}: {count} lines, {round((count / len(unknown_lines))*100), 2}% of all Unknown lines")
-
+    classify_chinese_unknowns = input(f"\nWould you like to classify the {len(unknown_lines)} Unknown lines as Chinese? [y/n]: ")
+    if classify_chinese_unknowns.lower() == 'y':
+        chinese_lines = classify_unknowns(unknown_lines, "Chinese")
+        # for i in range(len(chinese_lines)):
+        #     print(f"Line {i + 1}: {unknown_lines[i]} ==> {chinese_lines[i]}")
 
     show_english = input("\nWould you like to see all English lines? [y/n]: ")
     if show_english.lower() == 'y':
